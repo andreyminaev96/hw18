@@ -18,8 +18,10 @@ const elementImgRow =document.querySelector(".row");
 const imageWrap = document.querySelector(".images-wrap");
 const inputCover = document.getElementById("coverImg");
 const inputUploadPhoto = document.getElementById("userPhotos");
+const modalBody = document.querySelector(".modal-body");
 const addComments = document.forms["addComments"];
 const commentInput = addComments.elements["comment"];
+const commentWraper = document.querySelector(".current-image-comments-wrap");
 
 //Функцыя для получения информаціи о польщователе с сервера
 function onLoad(e) {
@@ -81,6 +83,43 @@ function deletePhoto(e) {
 
     }
 }
+//Функцыя для добавления коментариев
+function addComment(e) {
+    e.preventDefault();
+
+    const idComment = addComments.dataset.commentId;
+    const commentText = commentInput.value;
+    comentService.addComment(idComment, commentText);
+    imageService.getInfo(idComment)
+        .then((data) => imageModal.setNewComments(data))
+        .catch((error) => {
+            console.log(error);
+        });
+    addComments.reset()
+}
+//Функцыя для редактирования и удаления коментариев
+function deleteComment(e) {
+    if (e.target.closest(".fa-trash-alt")) {
+        const idImg = e.target.parentElement.dataset.imgId;
+        const idComments = e.target.parentElement.dataset.commentid;
+        comentService.deleteComment(idImg,idComments);
+        imageService.getInfo(idImg)
+            .then((data) => imageModal.setNewComments(data))
+            .catch((error) => {
+                console.log(error);
+            });
+    }
+    if(e.target.closest(".fa-edit")){
+        const idComments = e.target.parentElement.dataset.commentId;
+        const commentText = commentInput.value;
+        comentService.editComment(idComments, commentText)
+         .catch((error) => {
+            console.log(error);
+        });
+        addComments.reset()
+    }
+}
+
 
 imageWrap.addEventListener("click", (e) => {
     if (e.target.classList.contains("on-hover")) {
@@ -92,30 +131,8 @@ imageWrap.addEventListener("click", (e) => {
             .catch((error) => {
                 console.log(error);
             });
-
-        addComments.addEventListener("click", (e) => {
-            e.preventDefault();
-
-            if (e.target.closest("[data-class]")) {
-                const commentText = commentInput.value;
-
-                comentService.addComment(id, commentText)
-                    .catch((error) => {
-                        console.log(error);
-                    });
-
-            }
-        }) ;
-
     }
 });
-
-// Remove loader
-// addComments.addEventListener("click", (e) => {
-//     e.preventDefault();
-//
-//
-// });
 $('#imageModal').on('hidden.bs.modal', (e) => imageModal.loaderToggle());
 
 // Events
@@ -123,4 +140,6 @@ window.addEventListener("load", onLoad);
 inputCover.addEventListener("change", onCoverUpload);
 inputUploadPhoto.addEventListener("change", onloadingPhoto);
 elementImgRow.addEventListener('click', deletePhoto);
+addComments.addEventListener("submit", addComment);
+commentWraper.addEventListener("click", deleteComment);
 

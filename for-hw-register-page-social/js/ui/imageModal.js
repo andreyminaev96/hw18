@@ -1,17 +1,24 @@
 class ImageModal {
     constructor() {
         this._imageInfoContainer = document.querySelector("#imageModal .current-image-info");
+        this._imageCommentsWrap = document.querySelector(".current-image-comments-wrap");
         this._imgTag = document.querySelector(".current-image img");
         this._commentContainer = document.querySelector(".current-image-comments-wrap");
         this._loader = document.getElementById("loading");
+        this._form = document.forms["addComments"];
     }
 
     renderInfo(image) {
         this.clearModal();
         this.setBaseInfo(image);
         this.setImg(image);
+        this.setIdComment(image);
         this.setComments(image);
         this.loaderToggle();
+    }
+    setNewComments(comments) {
+        this.clearComent();
+        this.setComments(comments);
     }
 
     loaderToggle() {
@@ -26,20 +33,27 @@ class ImageModal {
     setImg({url}) {
         this._imgTag.src = url;
     }
+    setIdComment({_id}){
+        this._form.dataset.commentId = _id
+    }
 
-    setComments({comments, owner}) {
+    setComments({comments, owner, _id}) {
         let template = "";
-        comments.forEach((comment) => template += ImageModal._commentTemplate(comment, owner));
+        comments.forEach((comment) => template += ImageModal._commentTemplate(comment, owner, _id));
         this._commentContainer.insertAdjacentHTML("afterbegin", template);
     }
 
     clearModal() {
         this._imageInfoContainer.innerHTML = "";
+        this.clearComent()
+    }
+    clearComent() {
+        this._imageCommentsWrap.innerHTML = "";
     }
 
-    static _commentTemplate({owner, avatar, full_name, text, time_update, sub_comments}, {_id}) {
+    static _commentTemplate({owner, avatar, full_name, text, time_update, _id: commentId, sub_comments}, {_id: ownerId}, _id) {
         const currentUserId = localStorage.getItem("social_user_id");
-        const isOwner = currentUserId == owner || currentUserId == _id;
+        const isOwner = currentUserId == owner || currentUserId == ownerId;
         return `
         <div class="comment-item mb-4">
             <div class="comment-item-details d-flex">
@@ -53,7 +67,7 @@ class ImageModal {
                     <span class="text-secondary">${time_update}</span>
                 </div>
                 <!-- /.comment-item-info -->
-                <div class="ml-auto">
+                <div class="ml-auto" data-img-id="${_id}" data-comment-id="${commentId}">
                     ${isOwner ? '<i class="fas fa-edit"></i> <i class="fas fa-trash-alt"></i>': ''}
                 </div>
             </div>
